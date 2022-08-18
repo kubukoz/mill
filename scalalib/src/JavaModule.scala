@@ -23,7 +23,8 @@ trait JavaModule
     with GenIdeaModule
     with CoursierModule
     with OfflineSupportModule
-    with BspModule { outer =>
+    with BspModule
+    with SemanticDbJavaModule { outer =>
 
   def zincWorker: ZincWorkerModule = mill.scalalib.ZincWorkerModule
 

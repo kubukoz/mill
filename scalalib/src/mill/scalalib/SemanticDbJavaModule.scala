@@ -9,7 +9,7 @@ import java.nio.file.{CopyOption, Files, LinkOption, StandardCopyOption}
 import scala.util.DynamicVariable
 
 @experimental
-trait SemanticDbJavaModule extends JavaModule { hostModule =>
+trait SemanticDbJavaModule extends CoursierModule { hostModule: JavaModule =>
 
   def semanticDbVersion: Input[String] = T.input {
     T.env.getOrElse(
@@ -21,6 +21,14 @@ trait SemanticDbJavaModule extends JavaModule { hostModule =>
     ).asInstanceOf[String]
   }
 
+  def javaSemanticDbVersion: Input[String] = T.input {
+    T.env.getOrElse(
+      "JAVASEMANTICDB_VERSION",
+      SemanticDbJavaModule.contextJavaSemanticDbVersion.get()
+        .getOrElse(
+          SemanticDbJavaModule.buildTimeJavaSemanticDbVersion
+        )
+    ).asInstanceOf[String]
   }
 
   def semanticDbScalaVersion = hostModule match {
@@ -48,6 +56,23 @@ trait SemanticDbJavaModule extends JavaModule { hostModule =>
     }
   }
 
+  private def javaSemanticDbPluginIvyDeps: Target[Agg[Dep]] = T {
+    val sv = javaSemanticDbVersion()
+    if (sv.isEmpty) {
+      val msg =
+        """|
+           |You must provide a javaSemanticDbVersion
+           |
+           |def javaSemanticDbVersion = ???
+           |""".stripMargin
+      Result.Failure(msg)
+    } else {
+      Result.Success(Agg(
+        ivy"com.sourcegraph:semanticdb-javac:${sv}"
+      ))
+    }
+  }
+
   /**
    * Scalac options to activate the compiler plugins.
    */
@@ -63,6 +88,10 @@ trait SemanticDbJavaModule extends JavaModule { hostModule =>
     case _ => T {
         resolveDeps(semanticDbPluginIvyDeps)()
       }
+  }
+
+  private def resolvedJavaSemanticDbPluginIvyDeps: Target[Agg[PathRef]] = T {
+    resolveDeps(javaSemanticDbPluginIvyDeps)()
   }
 
   def semanticDbData: T[PathRef] = hostModule match {
@@ -100,10 +129,48 @@ trait SemanticDbJavaModule extends JavaModule { hostModule =>
             scalacOptions = scalacOptions,
             compilerClasspath = m.scalaCompilerClasspath().map(_.path),
             scalacPluginClasspath = semanticDbPluginClasspath().map(_.path),
-            reporter = T.reporter.apply(hashCode)
+            reporter = T.reporter.apply(m.hashCode())
           )
           .map(_.classes)
       }
+    case m: JavaModule =>
+      T.persistent {
+        // TODO: add extra options for Java 17+
+        val javacOptions = m.javacOptions() ++ Seq(
+          s"-Xplugin:semanticdb -sourceroot:${T.workspace} -targetroot:${T.dest / "classes"}"
+        )
+
+        val compileClasspath = m.compileClasspath() ++ resolvedJavaSemanticDbPluginIvyDeps()
+
+        val semDbPath = T.dest / "_semanticdb"
+        os.remove.all(semDbPath)
+
+        zincWorker
+          .worker()
+          .compileJava(
+            upstreamCompileOutput(),
+            allSourceFiles().map(_.path),
+            compileClasspath.map(_.path),
+            javacOptions,
+            T.reporter.apply(m.hashCode())
+          ).map { compileResult =>
+            val classes = compileResult.classes.path
+            os.walk(
+              classes,
+              skip = p => !(os.isFile(p) && p.ext == "semanticdb"),
+              preOrder = true
+            ).filter(os.isFile)
+              .foreach { p =>
+                os.copy(
+                  from = p,
+                  to = semDbPath / p.relativeTo(classes),
+                  createFolders = true
+                )
+              }
+            PathRef(semDbPath)
+          }
+      }
+
   }
 
   // keep in sync with bspCompiledClassesAndSemanticDbFiles
@@ -144,6 +211,7 @@ trait SemanticDbJavaModule extends JavaModule { hostModule =>
 }
 
 object SemanticDbJavaModule {
+  val buildTimeJavaSemanticDbVersion = "0.8.2"
   val buildTimeSemanticDbVersion = Versions.semanticDBVersion
 
   private[mill] val contextSemanticDbVersion: InheritableThreadLocal[Option[String]] =
