@@ -20,19 +20,19 @@ bootstrap script, included. You can also download the bootstrap script manually:
 .Mac/Linux
 [source,console,subs="verbatim,attributes"]
 ----
-> curl -L {mill-download-url}/mill-dist-{mill-version}-mill.sh -o mill
-> chmod +x mill
-> echo "//| mill-version: {mill-version}" > build.mill
-> ./mill version
+curl -L {mill-download-url}/mill-dist-{mill-version}-mill.sh -o mill
+chmod +x mill
+echo "//| mill-version: {mill-version}" > build.mill
+./mill version
 {mill-version}
 ----
 
 .Windows
 [source,console,subs="verbatim,attributes"]
 ----
-> curl.exe -L {mill-download-url}/mill-dist-{mill-version}-mill.bat -o mill.bat
-> echo "//| mill-version: {mill-version}" > build.mill
-> ./mill version
+curl.exe -L {mill-download-url}/mill-dist-{mill-version}-mill.bat -o mill.bat
+echo "//| mill-version: {mill-version}" > build.mill
+./mill version
 {mill-version}
 ----
 
@@ -50,8 +50,8 @@ Anyone who wants to work with the project can simply use the `./mill` script dir
 
 [source,console]
 ----
-> ./mill --version
-> ./mill __.compile # double underscore means compile all modules
+./mill --version
+./mill __.compile # double underscore means compile all modules
 ----
 
 
@@ -103,7 +103,7 @@ You can set up Bash and Zsh tab completions by subsequently running the command:
 
 [source,console,subs="verbatim,attributes"]
 ----
-> ./mill mill.tabcomplete/install
+./mill mill.tabcomplete/install
 ----
 
 This unpacks the completion script in `~/.cache/mill` and registers it in your `~/.bash_profile` and `~/.zshrc`.
@@ -114,7 +114,7 @@ You can also choose to write the tab-completion script to a manually-specified p
 
 [source,console,subs="verbatim,attributes"]
 ----
-> ./mill mill.tabcomplete/install --dest <path>
+./mill mill.tabcomplete/install --dest <path>
 ----
 
 When `--dest` is given, Mill simply generate the tab-completion script without registering it,
@@ -128,7 +128,7 @@ but you can set this up in your own projects by creating a `.gitattributes` file
 of your Github repository
 
 ```
-> echo '*.mill linguist-language=Scala' > .gitattributes
+echo '*.mill linguist-language=Scala' > .gitattributes
 ```
 
 [#_ide_support]
@@ -178,7 +178,7 @@ run this command to generate the BSP configuration files:
 
 [source,console]
 ----
-> ./mill --bsp-install
+./mill --bsp-install
 ----
 
 This should not be necessary with IntelliJ and VSCode being able to identify and
@@ -196,7 +196,7 @@ To generate IntelliJ IDEA project files into `.idea/`, run:
 
 [source,console]
 ----
-> ./mill mill.idea/
+./mill mill.idea/
 ----
 
 This will generate the XML files IntelliJ uses to configure your project
@@ -434,7 +434,7 @@ section. Note that:
 
 [source,console]
 ----
-> sed -i '0,/-cp "\$0"/{s/-cp "\$0"/-cp `cygpath -w "\$0"`/}; 0,/-cp "\$0"/{s/-cp "\$0"/-cp `cygpath -w "\$0"`/}' /usr/local/bin/mill
+sed -i '0,/-cp "\$0"/{s/-cp "\$0"/-cp `cygpath -w "\$0"`/}; 0,/-cp "\$0"/{s/-cp "\$0"/-cp `cygpath -w "\$0"`/}' /usr/local/bin/mill
 ----
 
 === Docker
@@ -444,8 +444,8 @@ a https://hub.docker.com/r/nightscape/scala-mill/["Docker image containing OpenJ
 
 [source,console]
 ----
-> docker pull nightscape/scala-mill
-> docker run -it nightscape/scala-mill
+docker pull nightscape/scala-mill
+docker run -it nightscape/scala-mill
 ----
 
 [#_manual]
@@ -456,7 +456,7 @@ To get started, download Mill and install it into your HOME ".local/bin" via the
 
 [source,console,subs="verbatim,attributes"]
 ----
-> sh -c "curl -L {mill-github-url}/releases/download/{version}/{version} > ~/.local/bin/mill && chmod +x ~/.local/bin/mill"
+sh -c "curl -L {mill-github-url}/releases/download/{version}/{version} > ~/.local/bin/mill && chmod +x ~/.local/bin/mill"
 ----
 
 === Coursier (unsupported)
@@ -473,7 +473,7 @@ Support by `asdf` is currently possible by using the https://github.com/asdf-com
 .Steps to install the `mill` plugin and Mill with `asdf`
 [source,console]
 ----
-> asdf plugin add mill
-> asdf install mill latest
-> asdf global mill latest
+asdf plugin add mill
+asdf install mill latest
+asdf global mill latest
 ----
